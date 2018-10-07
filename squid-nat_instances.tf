@@ -34,13 +34,11 @@ resource "aws_instance" "nat" {
     user_data = "${file("./squid-nat-user-data.txt")}"
 
     #created by s3 config and state
-    iam_instance_profile = "chumbucket_consumer_profile"
+    iam_instance_profile = "${aws_iam_instance_profile.chumbucket_consumer_profile.name}"
 
     tags {
         Name = "VPC NAT"
     }
-    
-    
 }
 
 resource "aws_eip" "nat" {
@@ -70,9 +68,6 @@ output "nat_address-ip" {
 /*
   NAT Instance - AZ B
 */
-
-
-
 resource "aws_route_table_association" "eu-west-1a-private" {
     subnet_id = "${aws_subnet.eu-west-1a-private.id}"
     route_table_id = "${aws_route_table.eu-west-1a-private.id}"
@@ -108,7 +103,7 @@ resource "aws_instance" "nat-b" {
     user_data = "${file("./squid-nat-user-data.txt")}"
 
     #created by s3 config and state
-    iam_instance_profile = "chumbucket_consumer_profile"
+    iam_instance_profile = "${aws_iam_instance_profile.chumbucket_consumer_profile.name}"
 
     tags {
         Name = "VPC NAT"
