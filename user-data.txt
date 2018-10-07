@@ -1,0 +1,42 @@
+#!/bin/bash
+
+iptables -A INPUT -j LOG --log-prefix 'IPTABLES@@'
+
+echo ":msg, contains, "IPTABLES@@" {
+  *.* /var/log/iptables.log
+  stop
+}" > /etc/rsyslog.d/10-iptables.conf
+
+service rsyslog restart
+
+yum -y install squid
+
+mkdir /etc/squid/ssl_cert/
+#openssl req -new -newkey rsa:2048 -sha256 -days 365 -nodes -x509 -extensions v3_ca -keyout /etc/squid/ssl_cert/myCA.pem  -out /etc/squid/ssl_cert/myCA.crt
+aws s3 cp s3://my-s3-chumbucket/ssl_cert/* /etc/squid/ssl_cert/
+
+#https://forum.pfsense.org/index.php?topic=123461.0
+aws s3 cp s3://my-s3-chumbucket/squid.conf /etc/squid/squid.conf
+
+service squid start
+
+#iptables -t nat --line-numbers -L
+#iptables -t nat -D PREROUTING 6
+/sbin/iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 80 -j REDIRECT --to-ports 3129
+/sbin/iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 443 -j REDIRECT --to-ports 3130
+
+/etc/init.d/iptables save
+/etc/init.d/iptables restart
+
+#rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+#aws s3 cp s3://my-s3-chumbucket/logstash.repo /etc/yum.repos.d/logstash.repo
+#yum -y install logstash
+
+
+
+#echo '*/15 * * * * aws s3 cp /home/ec2-user/testlogs/ s3://my-s3-chumbucket/ --recursive --exclude "*" --include "*.log"' | tee -a /etc/crontab
+#echo '*/15 * * * * aws s3 cp /var/log/squid/ s3://my-s3-chumbucket/squid/ --recursive --exclude "*" --include "*.log"' | tee -a /etc/crontab
+#echo '*/15 * * * * aws s3 cp /var/log/iptables.log s3://my-s3-chumbucket/ --recursive --exclude "*" --include "*.log"' | tee -a /etc/crontab
+#echo '*/15 * * * * aws s3 cp /var/log/messages s3://my-s3-chumbucket/ --recursive --exclude "*" --include "*.log"' | tee -a /etc/crontab
+
+#echo '*/15 * * * * aws s3 cp /home/ec2-user/testlogs/ s3://my-s3-chumbucket/ --recursive --exclude "*" --include "*.log"' | tee -a /etc/crontab
