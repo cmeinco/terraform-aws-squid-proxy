@@ -1,5 +1,17 @@
 *.zip
+
 terraform
+
+#  Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# .tfvars files
+*.tfvars
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

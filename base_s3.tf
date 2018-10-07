@@ -13,19 +13,22 @@
 | #02 - 2018/02/09 - tls - Warning: aws_iam_instance_profile.chumbucket_consumer_profile: "roles": [DEPRECATED] Use `role` instead. Only a single role can be passed to an IAM Instance Profile
 \******************************************************************************/
 
-
-
-resource "aws_s3_bucket" "chumbucket" {
+#resource "aws_s3_bucket" "chumbucket" {
+#  # We explicitly prevent destruction using terraform. Remove this only if you really know what you're doing.
+#  lifecycle {
+#    prevent_destroy = true
+#  }
+data "aws_s3_bucket" "chumbucket" {
   bucket = "my-s3-chumbucket"
 }
 
 resource "aws_iam_instance_profile" "chumbucket_consumer_profile" {
-  name = "chumbucket_consumer_profile"
+  name = "s3bucket_consumer_profile"
   roles = ["${aws_iam_role.chumbucket_consumer_role.name}"]
 }
 
 resource "aws_iam_role" "chumbucket_consumer_role" {
-  name = "ec2role_chumbucket_consumer_role"
+  name = "ec2role_s3bucket_consumer_role"
 
   assume_role_policy = <<EOF
 {
@@ -46,7 +49,7 @@ EOF
 
 
 resource "aws_s3_bucket_policy" "chumbucket" {
-  bucket = "${aws_s3_bucket.chumbucket.id}"
+  bucket = "${data.aws_s3_bucket.chumbucket.id}"
   policy =<<POLICY
 {
   "Version": "2012-10-17",
@@ -56,7 +59,7 @@ resource "aws_s3_bucket_policy" "chumbucket" {
         "Effect": "Allow",
         "Principal":{"AWS":"${aws_iam_role.chumbucket_consumer_role.arn}"},
         "Action": "s3:ListBucket",
-        "Resource": "${aws_s3_bucket.chumbucket.arn}"
+        "Resource": "${data.aws_s3_bucket.chumbucket.arn}"
     },
     {
         "Effect": "Allow",
@@ -66,7 +69,7 @@ resource "aws_s3_bucket_policy" "chumbucket" {
             "s3:PutObject",
             "s3:DeleteObject"
         ],
-        "Resource": "${aws_s3_bucket.chumbucket.arn}/*"
+        "Resource": "${data.aws_s3_bucket.chumbucket.arn}/*"
     },
     {
       "Effect": "Deny",
@@ -75,7 +78,7 @@ resource "aws_s3_bucket_policy" "chumbucket" {
         "*"
       ],
       "Resource": [
-        "${aws_s3_bucket.chumbucket.arn}/*"
+        "${data.aws_s3_bucket.chumbucket.arn}/*"
       ],
       "Condition": {
         "DateLessThan": {
@@ -89,7 +92,7 @@ POLICY
 }
 
 output "s3_bucket_name" {
-  value = "${aws_s3_bucket.chumbucket.bucket}"
+  value = "${data.aws_s3_bucket.chumbucket.bucket}"
 }
 
 output "s3_iam_instance_profile_name" {

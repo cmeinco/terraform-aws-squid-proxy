@@ -22,18 +22,16 @@
 */
 
 resource "aws_instance" "nat" {
-  #https://aws.amazon.com/amazon-linux-ami/
-    #ami = "ami-30913f47" # this is a special ami preconfigured to do NAT
-    ami = "ami-35d6664d"
+    ami = "${data.aws_ami.nat_ami.id}"
     availability_zone = "${var.aws_region}a"
     instance_type = "m1.small"
     key_name = "${var.aws_key_name}"
-    vpc_security_group_ids = ["${data.aws_security_group.nat.id}"]
-    subnet_id = "${data.aws_subnet.eu-west-1a-public.id}"
+    vpc_security_group_ids = ["${aws_security_group.nat.id}"]
+    subnet_id = "${aws_subnet.eu-west-1a-public.id}"
     associate_public_ip_address = true
     source_dest_check = false
 
-    user_data = "${file("./user-data.txt")}"
+    user_data = "${file("./squid-nat-user-data.txt")}"
 
     #created by s3 config and state
     iam_instance_profile = "chumbucket_consumer_profile"
@@ -41,6 +39,8 @@ resource "aws_instance" "nat" {
     tags {
         Name = "VPC NAT"
     }
+    
+    
 }
 
 resource "aws_eip" "nat" {
@@ -49,7 +49,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_route_table" "eu-west-1a-private" {
-    vpc_id = "${data.aws_vpc.default.id}"
+    vpc_id = "${aws_vpc.default.id}"
 
     route {
         cidr_block = "0.0.0.0/0"
@@ -74,11 +74,11 @@ output "nat_address-ip" {
 
 
 resource "aws_route_table_association" "eu-west-1a-private" {
-    subnet_id = "${data.aws_subnet.eu-west-1a-private.id}"
+    subnet_id = "${aws_subnet.eu-west-1a-private.id}"
     route_table_id = "${aws_route_table.eu-west-1a-private.id}"
 }
 resource "aws_route_table" "eu-west-1b-private" {
-    vpc_id = "${data.aws_vpc.default.id}"
+    vpc_id = "${aws_vpc.default.id}"
 
     route {
         cidr_block = "0.0.0.0/0"
@@ -91,23 +91,21 @@ resource "aws_route_table" "eu-west-1b-private" {
 }
 
 resource "aws_route_table_association" "eu-west-1b-private" {
-    subnet_id = "${data.aws_subnet.eu-west-1b-private.id}"
+    subnet_id = "${aws_subnet.eu-west-1b-private.id}"
     route_table_id = "${aws_route_table.eu-west-1b-private.id}"
 }
 
 resource "aws_instance" "nat-b" {
-  #https://aws.amazon.com/amazon-linux-ami/
-    #ami = "ami-30913f47" # this is a special ami preconfigured to do NAT
-    ami = "ami-35d6664d"
+    ami = "${data.aws_ami.nat_ami.id}"
     availability_zone = "${var.aws_region}b"
     instance_type = "m1.small"
     key_name = "${var.aws_key_name}"
-    vpc_security_group_ids = ["${data.aws_security_group.nat.id}"]
-    subnet_id = "${data.aws_subnet.eu-west-1b-public.id}"
+    vpc_security_group_ids = ["${aws_security_group.nat.id}"]
+    subnet_id = "${aws_subnet.eu-west-1b-public.id}"
     associate_public_ip_address = true
     source_dest_check = false
 
-    user_data = "${file("./user-data.txt")}"
+    user_data = "${file("./squid-nat-user-data.txt")}"
 
     #created by s3 config and state
     iam_instance_profile = "chumbucket_consumer_profile"
@@ -125,4 +123,24 @@ output "nat_addressb-dns" {
 }
 output "nat_addressb-ip" {
   value = "${aws_instance.nat-b.public_ip}"
+}
+
+# automatic lookup based on   #https://aws.amazon.com/amazon-linux-ami/
+data "aws_ami" "nat_ami" {
+  most_recent      = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-vpc-nat*"]
+  }
+
+}
+
+output "latest_ami" {
+  value = "${data.aws_ami.nat_ami.name}"
 }
