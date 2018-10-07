@@ -103,7 +103,8 @@ resource "aws_security_group" "nat" {
     vpc_id = "${aws_vpc.default.id}"
 
     tags {
-        Name = "NATSG"
+        Name = "NATSG",
+        "dynamic-update" = "true"
     }
 }
 
