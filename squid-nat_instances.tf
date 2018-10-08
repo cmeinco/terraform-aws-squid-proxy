@@ -20,11 +20,11 @@
 /*
   NAT Instance - AZ A
 */
-
+#https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#AvailableInstanceTypes
 resource "aws_instance" "nat" {
     ami = "${data.aws_ami.nat_ami.id}"
     availability_zone = "${var.aws_region}a"
-    instance_type = "m1.small"
+    instance_type = "t2.micro"
     key_name = "${var.aws_key_name}"
     vpc_security_group_ids = ["${aws_security_group.nat.id}"]
     subnet_id = "${aws_subnet.eu-west-1a-public.id}"
@@ -93,7 +93,7 @@ resource "aws_route_table_association" "eu-west-1b-private" {
 resource "aws_instance" "nat-b" {
     ami = "${data.aws_ami.nat_ami.id}"
     availability_zone = "${var.aws_region}b"
-    instance_type = "m1.small"
+    instance_type = "t2.micro"
     key_name = "${var.aws_key_name}"
     vpc_security_group_ids = ["${aws_security_group.nat.id}"]
     subnet_id = "${aws_subnet.eu-west-1b-public.id}"

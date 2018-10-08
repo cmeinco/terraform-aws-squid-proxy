@@ -64,12 +64,13 @@ resource "aws_security_group" "db" {
         Name = "DBServerSG"
     }
 }
-/*
+
+#https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-types.html#AvailableInstanceTypes
+
 resource "aws_instance" "db-1" {
-    ami = "${lookup(var.amis, var.aws_region)}"
-    #availability_zone = "eu-west-1a"
     availability_zone = "us-west-2a"
-    instance_type = "m1.small"
+    ami = "${data.aws_ami.private_instance_ami.id}"
+    instance_type = "t2.nano"
     key_name = "${var.aws_key_name}"
     vpc_security_group_ids = ["${aws_security_group.db.id}"]
     subnet_id = "${aws_subnet.eu-west-1a-private.id}"
@@ -81,9 +82,9 @@ resource "aws_instance" "db-1" {
 }
 
 resource "aws_instance" "db-2" {
-    ami = "${lookup(var.amis, var.aws_region)}"
+    ami = "${data.aws_ami.private_instance_ami.id}"
     availability_zone = "us-west-2b"
-    instance_type = "m1.small"
+    instance_type = "t2.nano"
     key_name = "${var.aws_key_name}"
     vpc_security_group_ids = ["${aws_security_group.db.id}"]
     subnet_id = "${aws_subnet.eu-west-1b-private.id}"
@@ -98,4 +99,23 @@ resource "aws_instance" "db-2" {
 output "db_address" {
   value = "${aws_instance.db-1.public_dns}"
 }
-*/
+
+# automatic lookup based on   #https://aws.amazon.com/amazon-linux-ami/
+data "aws_ami" "private_instance_ami" {
+  most_recent      = true
+
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-vpc-nat*"]
+  }
+
+}
+
+output "latest_private_ami" {
+  value = "${data.aws_ami.private_instance_ami.name}"
+}
