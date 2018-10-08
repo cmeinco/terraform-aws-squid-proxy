@@ -13,7 +13,9 @@ yum -y install squid
 
 mkdir /etc/squid/ssl_cert/
 #openssl req -new -newkey rsa:2048 -sha256 -days 365 -nodes -x509 -extensions v3_ca -keyout /etc/squid/ssl_cert/myCA.pem  -out /etc/squid/ssl_cert/myCA.crt
-aws s3 cp s3://my-s3-chumbucket/ssl_cert/* /etc/squid/ssl_cert/
+#aws s3 cp s3://my-s3-chumbucket/ssl_cert/* /etc/squid/ssl_cert/
+aws s3 cp s3://my-s3-chumbucket/ssl_cert/myCA.crt /etc/squid/ssl_cert/
+aws s3 cp s3://my-s3-chumbucket/ssl_cert/myCA.pem /etc/squid/ssl_cert/
 
 #https://forum.pfsense.org/index.php?topic=123461.0
 aws s3 cp s3://my-s3-chumbucket/squid.conf /etc/squid/squid.conf
